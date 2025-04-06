@@ -26,6 +26,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors());
 
+app.get('/', (req, res) => {
+  res.send('🚀 Employee Management GraphQL API is running. Use /graphql to access the endpoint.');
+});
+
 app.use('/graphql', graphqlHTTP({
     schema,
     graphiql: true
