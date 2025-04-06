@@ -41,21 +41,41 @@ const RootQuery = new GraphQLObjectType({
         login: {
             type: UserType,
             args: {
-                email: { type: new GraphQLNonNull(GraphQLString) },
-                password: { type: new GraphQLNonNull(GraphQLString) }
+              email: { type: new GraphQLNonNull(GraphQLString) },
+              password: { type: new GraphQLNonNull(GraphQLString) }
             },
             async resolve(_, args) {
-                const user = await User.findOne({ email: args.email });
-                if (!user) throw new Error("User not found");
-
-                const isMatch = await bcrypt.compare(args.password, user.password);
-                if (!isMatch) throw new Error("Invalid credentials");
-
-                const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-                return { ...user._doc, token };
+              console.log("🚀 Login request:", args.email);
+          
+              const user = await User.findOne({ email: args.email });
+          
+              if (!user) {
+                console.error("❌ User not found for email:", args.email);
+                throw new Error("User not found");
+              }
+          
+              console.log("✅ User found:", user.email);
+          
+              const isMatch = await bcrypt.compare(args.password, user.password);
+              console.log("🔐 Password match:", isMatch);
+          
+              if (!isMatch) {
+                console.error("❌ Invalid password for user:", user.email);
+                throw new Error("Invalid credentials");
+              }
+          
+              if (!process.env.JWT_SECRET) {
+                console.error("❌ JWT_SECRET is not defined in .env");
+                throw new Error("JWT secret missing");
+              }
+          
+              const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+              console.log("✅ Token generated");
+          
+              return { ...user._doc, token };
             }
-        },
+          },
+                  
         employees: {
             type: new GraphQLList(EmployeeType),
             async resolve() {
